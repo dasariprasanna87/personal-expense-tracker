@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite"; // 1. Import Tailwind
 
 // https://vite.dev
 export default defineConfig({
+  base: "/personal-expense-tracker/",
   plugins: [
     react(),
     tailwindcss(), // 2. Add the plugin here
