@@ -63,7 +63,21 @@ const TrackerPage = () => {
   };
 
   const handleDeleteExpense = (idToDelete) => {
-    setExpenses(expenses.filter((item) => item.id !== idToDelete));
+    // setExpenses(expenses.filter((item) => item.id !== idToDelete));
+    // 1. Mark the targeted item as "isDeleting: true" inside our state array
+    setExpenses(
+      expenses.map((item) =>
+        item.id === idToDelete ? { ...item, isDeleting: true } : item,
+      ),
+    );
+
+    // 2. Wait 300 milliseconds for the Tailwind animation transition to finish executing
+    setTimeout(() => {
+      // 3. Officially filter it out of the array state once it's completely hidden
+      setExpenses((prevExpenses) =>
+        prevExpenses.filter((item) => item.id !== idToDelete),
+      );
+    }, 300);
   };
   const handleClearAll = () => {
     if (window.confirm("Are you sure you want to delete all expenses?")) {
@@ -208,6 +222,7 @@ const TrackerPage = () => {
                 title={item.title}
                 amount={item.amount}
                 category={item.category}
+                isDeleting={item.isDeleting}
                 onDelete={handleDeleteExpense}
               />
             ))}
