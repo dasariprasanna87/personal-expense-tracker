@@ -1,4 +1,13 @@
 import { useState, useEffect } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
+
 import ExpenseItem from "../ExpenseItem";
 
 const TrackerPage = () => {
@@ -11,6 +20,20 @@ const TrackerPage = () => {
   const totalExpense = expenses
     ? expenses.reduce((sum, item) => sum + item.amount, 0)
     : 0;
+  // 📊 CHART DATA PIPELINE: Groups and sums amounts by category for the Pie Chart
+  const chartData = expenses.reduce((acc, item) => {
+    // Check if this category already exists in our summary list
+    const existingCategory = acc.find((c) => c.name === item.category);
+    if (existingCategory) {
+      existingCategory.value += item.amount; // Add to existing total
+    } else {
+      acc.push({ name: item.category, value: item.amount }); // Create new category row
+    }
+    return acc;
+  }, []);
+
+  // Pre-defined modern colors for our pie slices (Food, Travel, Bills, Entertainment)
+  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 
   // 2. Form Tracking States
   const [inputTitle, setInputTitle] = useState("");
@@ -56,12 +79,54 @@ const TrackerPage = () => {
         </h1>
 
         {/* 💰 Total Expense Banner Card - Moved into the layout container grid */}
-        <div className="bg-blue-600 text-white p-5 rounded-2xl shadow-sm text-center mb-6">
+        <div className="bg-slate-900 text-white rounded-2xl p-6 text-center mb-6 shadow-md">
           <span className="text-xl font-bold uppercase tracking-wider text-yellow-300 block mb-1">
             Total Amount Spent
           </span>
           <h2 className="text-3xl font-black">₹{totalExpense}</h2>
         </div>
+        {/* 📊 Visual Category Breakdown Pie Chart Card */}
+        {expenses.length > 0 && (
+          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-800 text-left mb-4">
+              Category Breakdown
+            </h3>
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => [`₹${value}`, "Amount"]}
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      borderRadius: "12px",
+                      border: "1px solid #f3f4f6",
+                    }}
+                  />
+                  <Legend
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: "10px" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
 
         {/* 🛠️ Modern Input Entry Form Card */}
         <form
