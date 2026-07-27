@@ -20,6 +20,7 @@ const TrackerPage = () => {
   const totalExpense = expenses
     ? expenses.reduce((sum, item) => sum + item.amount, 0)
     : 0;
+
   // 📊 CHART DATA PIPELINE: Groups and sums amounts by category for the Pie Chart
   const chartData = expenses.reduce((acc, item) => {
     // Check if this category already exists in our summary list
@@ -51,7 +52,7 @@ const TrackerPage = () => {
     if (!inputTitle || !inputAmount) return;
 
     const newExpense = {
-      id: Date.now(), // 🔥 FIXED: Added () to execute and get the unique numeric ID!
+      id: Date.now(),
       title: inputTitle,
       amount: parseFloat(inputAmount),
       category: inputCategory,
@@ -63,7 +64,6 @@ const TrackerPage = () => {
   };
 
   const handleDeleteExpense = (idToDelete) => {
-    // setExpenses(expenses.filter((item) => item.id !== idToDelete));
     // 1. Mark the targeted item as "isDeleting: true" inside our state array
     setExpenses(
       expenses.map((item) =>
@@ -79,30 +79,34 @@ const TrackerPage = () => {
       );
     }, 300);
   };
+
   const handleClearAll = () => {
     if (window.confirm("Are you sure you want to delete all expenses?")) {
       setExpenses([]);
       localStorage.removeItem("savedExpenses");
     }
   };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
+    // 🔲 REMOVED min-h-screen/bg-gray-50 from outer container wrapper so the App.jsx layout background shows through naturally
+    <div className="py-6 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight text-center mb-6">
+        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight text-center mb-6 transition-colors">
           Personal Expense Tracker
         </h1>
 
-        {/* 💰 Total Expense Banner Card - Moved into the layout container grid */}
-        <div className="bg-slate-900 text-white rounded-2xl p-6 text-center mb-6 shadow-md">
-          <span className="text-xl font-bold uppercase tracking-wider text-yellow-300 block mb-1">
+        {/* 💰 Total Expense Banner Card */}
+        <div className="bg-slate-900 dark:bg-slate-900 border dark:border-slate-800 text-white rounded-2xl p-6 text-center mb-6 shadow-md transition-colors">
+          <span className="text-xl font-bold uppercase tracking-wider text-yellow-400 block mb-1">
             Total Amount Spent
           </span>
           <h2 className="text-3xl font-black">₹{totalExpense}</h2>
         </div>
+
         {/* 📊 Visual Category Breakdown Pie Chart Card */}
         {expenses.length > 0 && (
-          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-800 text-left mb-4">
+          <div className="bg-white border border-gray-100 dark:bg-slate-900 dark:border-slate-800 shadow-sm rounded-2xl p-6 mb-6 transition-colors">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 text-left mb-4 transition-colors">
               Category Breakdown
             </h3>
             <div className="h-64 w-full">
@@ -124,13 +128,16 @@ const TrackerPage = () => {
                       />
                     ))}
                   </Pie>
+                  {/* 🔧 Dynamic Tooltip: Styled to adapt seamlessly to dark mode frameworks */}
                   <Tooltip
                     formatter={(value) => [`₹${value}`, "Amount"]}
                     contentStyle={{
-                      backgroundColor: "#fff",
+                      backgroundColor: "var(--color-bg-card, #fff)",
                       borderRadius: "12px",
-                      border: "1px solid #f3f4f6",
+                      border: "1px solid var(--color-border-card, #f3f4f6)",
+                      color: "var(--color-text-card, #000)",
                     }}
+                    itemStyle={{ color: "inherit" }}
                   />
                   <Legend
                     iconType="circle"
@@ -145,10 +152,10 @@ const TrackerPage = () => {
         {/* 🛠️ Modern Input Entry Form Card */}
         <form
           onSubmit={handleAddExpense}
-          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6"
+          className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 mb-6 transition-colors"
         >
           <div className="mb-4">
-            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+            <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 transition-colors">
               Expense Title
             </label>
             <input
@@ -156,13 +163,13 @@ const TrackerPage = () => {
               placeholder="e.g., Dinner, Groceries"
               value={inputTitle}
               onChange={(e) => setInputTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 transition-colors">
                 Amount (₹)
               </label>
               <input
@@ -170,22 +177,30 @@ const TrackerPage = () => {
                 placeholder="150"
                 value={inputAmount}
                 onChange={(e) => setInputAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm placeholder-gray-400 dark:placeholder-gray-500"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 transition-colors">
                 Category
               </label>
               <select
                 value={inputCategory}
                 onChange={(e) => setInputCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm cursor-pointer"
               >
-                <option value="Food">Food</option>
-                <option value="Travel">Travel</option>
-                <option value="Bills">Bills</option>
-                <option value="Entertainment">Entertainment</option>
+                <option value="Food" className="dark:bg-slate-800">
+                  Food
+                </option>
+                <option value="Travel" className="dark:bg-slate-800">
+                  Travel
+                </option>
+                <option value="Bills" className="dark:bg-slate-800">
+                  Bills
+                </option>
+                <option value="Entertainment" className="dark:bg-slate-800">
+                  Entertainment
+                </option>
               </select>
             </div>
           </div>
@@ -201,10 +216,9 @@ const TrackerPage = () => {
         {/* 📋 Dynamic Display Output List Section */}
         <div className="space-y-2">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 transition-colors">
               Transaction History
             </h3>
-            {/* Only show the clear button if there are active expenses to delete */}
             {expenses.length > 0 && (
               <button
                 onClick={handleClearAll}
@@ -214,18 +228,17 @@ const TrackerPage = () => {
               </button>
             )}
           </div>
-          {expenses &&
-            expenses.map((item) => (
+
+          {/* Map through expenses list */}
+          <div className="space-y-2">
+            {expenses.map((expense) => (
               <ExpenseItem
-                key={item.id}
-                id={item.id}
-                title={item.title}
-                amount={item.amount}
-                category={item.category}
-                isDeleting={item.isDeleting}
+                key={expense.id}
+                item={expense}
                 onDelete={handleDeleteExpense}
               />
             ))}
+          </div>
         </div>
       </div>
     </div>
