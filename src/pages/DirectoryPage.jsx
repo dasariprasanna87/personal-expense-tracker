@@ -6,6 +6,10 @@ const DirectoryPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   // 🌟 1. Track which employee card is clicked (null means modal is closed)
   const [selectedMember, setSelectedMember] = useState(null);
+  // 1. Form tracking variables
+  const [newName, setNewName] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false); // Controls opening/closing the form
 
   useEffect(() => {
     setIsLoading(true);
@@ -39,6 +43,32 @@ const DirectoryPage = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [selectedMember]); // 🔄 Re-run this effect only when selectedMember changes
+  const handleAddEmployee = (e) => {
+    e.preventDefault();
+    if (!newName || !newTitle) return;
+
+    const nameParts = newName.trim().split(" ");
+    // Using indexing directly to get clean, reliable string values
+    const firstName = nameParts[0] || "New";
+    const lastName = nameParts.slice(1).join(" ") || "Member";
+
+    const newEmployee = {
+      id: Date.now(),
+      firstName: firstName,
+      lastName: lastName,
+      company: {
+        title: newTitle,
+        name: "My Dashboard App Corp",
+      },
+      // ⚡ BULLETPROOF FIX: A direct public URL that works anywhere without needing template variables!
+      image: "https://dicebear.com",
+    };
+
+    setTeam([newEmployee, ...team]);
+    setNewName("");
+    setNewTitle("");
+    setIsFormOpen(false);
+  };
 
   return (
     <div className="max-w-3xl mx-auto text-center px-4 py-6">
@@ -58,6 +88,56 @@ const DirectoryPage = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+      </div>
+      {/* ➕ Add Employee Control Action Layout Block */}
+      <div className="mb-6 max-w-md mx-auto text-right">
+        <button
+          onClick={() => setIsFormOpen(!isFormOpen)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-xl shadow-sm transition active:scale-98 cursor-pointer"
+        >
+          {isFormOpen ? "✕ Close Form" : "➕ Add New Team Member"}
+        </button>
+
+        {/* Sliding Expandable Form Frame container panel box */}
+        {isFormOpen && (
+          <form
+            onSubmit={handleAddEmployee}
+            className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 rounded-2xl shadow-sm text-left mt-4 transition-all duration-300"
+          >
+            <div className="mb-3.5">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                placeholder="John Doe"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                Corporate Title / Role
+              </label>
+              <input
+                type="text"
+                placeholder="Lead Architect, Specialist"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white font-semibold py-2 rounded-xl text-sm transition"
+            >
+              Save Employee Profile
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Grid container */}
@@ -115,12 +195,33 @@ const DirectoryPage = () => {
             </button>
 
             {/* Profile Avatar Image Box */}
-            <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center mb-4 overflow-hidden">
-              <img
-                src={selectedMember.image}
-                alt="avatar"
-                className="w-full h-full object-cover"
-              />
+            {/* 👤 Profile Avatar Image Box - FIXED to use local SVGs instead of external web URLs */}
+            <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center mb-4 overflow-hidden shadow-inner">
+              {selectedMember.image &&
+              !selectedMember.image.includes("dicebear") ? (
+                // If it's a real live user from DummyJSON, load their real network image safely
+                <img
+                  src={selectedMember.image}
+                  alt="avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                // ⚡ FALLBACK: If it's your custom member, render a local, beautiful vector silhouette icon instantly without any network call!
+                <svg
+                  className="w-10 h-10 text-blue-500 dark:text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  viewBox="0 0 24 24"
+                  xmlns="http://w3.org"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                  />
+                </svg>
+              )}
             </div>
 
             {/* Employee Core Names Text headers */}
