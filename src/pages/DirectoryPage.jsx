@@ -20,6 +20,25 @@ const DirectoryPage = () => {
         setIsLoading(false);
       });
   }, []);
+  // ⌨️ Side Effect: Listen for the Escape key to close the modal automatically
+  useEffect(() => {
+    // 1. Define the handler function
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setSelectedMember(null);
+      }
+    };
+
+    // 2. Only add the event listener if a modal is actually open
+    if (selectedMember) {
+      window.addEventListener("keydown", handleKeyDown);
+    }
+
+    // 3. 🔥 THE CLEANUP FUNCTION: Removes the listener when the modal closes or unmounts
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedMember]); // 🔄 Re-run this effect only when selectedMember changes
 
   return (
     <div className="max-w-3xl mx-auto text-center px-4 py-6">
