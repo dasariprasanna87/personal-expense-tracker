@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+// ⚙️ Step 1: Add useMemo to your React imports at the very top
+import { useState, useEffect, useMemo } from "react";
 import {
   PieChart,
   Pie,
@@ -7,11 +8,9 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
-
 import ExpenseItem from "../ExpenseItem";
 
 const TrackerPage = () => {
-  // 1. Core State: Checks local storage first. If empty, starts with a clean empty array [].
   const [expenses, setExpenses] = useState(() => {
     const localData = localStorage.getItem("savedExpenses");
     return localData ? JSON.parse(localData) : [];
@@ -21,32 +20,36 @@ const TrackerPage = () => {
     ? expenses.reduce((sum, item) => sum + item.amount, 0)
     : 0;
 
-  // 📊 CHART DATA PIPELINE: Groups and sums amounts by category for the Pie Chart
-  const chartData = expenses.reduce((acc, item) => {
-    // Check if this category already exists in our summary list
-    const existingCategory = acc.find((c) => c.name === item.category);
-    if (existingCategory) {
-      existingCategory.value += item.amount; // Add to existing total
-    } else {
-      acc.push({ name: item.category, value: item.amount }); // Create new category row
-    }
-    return acc;
-  }, []);
+  // 🚀 Step 2: Wrap your Chart Data pipeline inside useMemo
+  const chartData = useMemo(() => {
+    // This console log will help you prove that your optimization works!
+    console.log("📊 Chart data recalculated!");
 
-  // Pre-defined modern colors for our pie slices (Food, Travel, Bills, Entertainment)
+    return expenses.reduce((acc, item) => {
+      const existingCategory = acc.find((c) => c.name === item.category);
+      if (existingCategory) {
+        existingCategory.value += item.amount;
+      } else {
+        acc.push({ name: item.category, value: item.amount });
+      }
+      return acc;
+    }, []);
+  }, [expenses]); // 👈 Dependency Array: Only re-run if the 'expenses' array changes!
+
+  // Pre-defined modern colors for our pie slices
   const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
 
-  // 2. Form Tracking States
+  // Form Tracking States
   const [inputTitle, setInputTitle] = useState("");
   const [inputAmount, setInputAmount] = useState("");
   const [inputCategory, setInputCategory] = useState("Food");
 
-  // 💾 AUTOMATIC SAVE: Runs every single time the 'expenses' state array changes!
+  // AUTOMATIC SAVE
   useEffect(() => {
     localStorage.setItem("savedExpenses", JSON.stringify(expenses));
   }, [expenses]);
 
-  // 3. Form Submission Handler
+  // Form Submission Handler
   const handleAddExpense = (e) => {
     e.preventDefault();
     if (!inputTitle || !inputAmount) return;
@@ -64,16 +67,13 @@ const TrackerPage = () => {
   };
 
   const handleDeleteExpense = (idToDelete) => {
-    // 1. Mark the targeted item as "isDeleting: true" inside our state array
     setExpenses(
       expenses.map((item) =>
         item.id === idToDelete ? { ...item, isDeleting: true } : item,
       ),
     );
 
-    // 2. Wait 300 milliseconds for the Tailwind animation transition to finish executing
     setTimeout(() => {
-      // 3. Officially filter it out of the array state once it's completely hidden
       setExpenses((prevExpenses) =>
         prevExpenses.filter((item) => item.id !== idToDelete),
       );
@@ -88,14 +88,14 @@ const TrackerPage = () => {
   };
 
   return (
-    // 🔲 REMOVED min-h-screen/bg-gray-50 from outer container wrapper so the App.jsx layout background shows through naturally
+    // Keep your existing return JSX exactly the same as it was!
     <div className="py-6 px-4 sm:px-6 lg:px-8 font-sans">
+      {/* ... rest of your JSX remains unchanged ... */}
       <div className="max-w-md mx-auto">
         <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight text-center mb-6 transition-colors">
           Personal Expense Tracker
         </h1>
 
-        {/* 💰 Total Expense Banner Card */}
         <div className="bg-slate-900 dark:bg-slate-900 border dark:border-slate-800 text-white rounded-2xl p-6 text-center mb-6 shadow-md transition-colors">
           <span className="text-xl font-bold uppercase tracking-wider text-yellow-400 block mb-1">
             Total Amount Spent
@@ -103,7 +103,6 @@ const TrackerPage = () => {
           <h2 className="text-3xl font-black">₹{totalExpense}</h2>
         </div>
 
-        {/* 📊 Visual Category Breakdown Pie Chart Card */}
         {expenses.length > 0 && (
           <div className="bg-white border border-gray-100 dark:bg-slate-900 dark:border-slate-800 shadow-sm rounded-2xl p-6 mb-6 transition-colors">
             <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 text-left mb-4 transition-colors">
@@ -128,7 +127,6 @@ const TrackerPage = () => {
                       />
                     ))}
                   </Pie>
-                  {/* 🔧 Dynamic Tooltip: Styled to adapt seamlessly to dark mode frameworks */}
                   <Tooltip
                     formatter={(value) => [`₹${value}`, "Amount"]}
                     contentStyle={{
@@ -149,7 +147,6 @@ const TrackerPage = () => {
           </div>
         )}
 
-        {/* 🛠️ Modern Input Entry Form Card */}
         <form
           onSubmit={handleAddExpense}
           className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 mb-6 transition-colors"
@@ -213,7 +210,6 @@ const TrackerPage = () => {
           </button>
         </form>
 
-        {/* 📋 Dynamic Display Output List Section */}
         <div className="space-y-2">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500 transition-colors">
@@ -229,7 +225,6 @@ const TrackerPage = () => {
             )}
           </div>
 
-          {/* Map through expenses list */}
           <div className="space-y-2">
             {expenses.map((expense) => (
               <ExpenseItem
