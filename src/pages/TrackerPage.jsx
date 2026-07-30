@@ -15,11 +15,22 @@ const TrackerPage = () => {
     const localData = localStorage.getItem("savedExpenses");
     return localData ? JSON.parse(localData) : [];
   });
-
+  // 1. Add a new state for the budget limit (defaulting to ₹10,000)
+  const [budgetLimit, setBudgetLimit] = useState(() => {
+    const savedBudget = localStorage.getItem("savedBudget");
+    return savedBudget ? parseFloat(savedBudget) : 10000;
+  });
+  // 2. Automatically persist budget changes to local storage
+  useEffect(() => {
+    localStorage.setItem("savedBudget", budgetLimit.toString());
+  }, [budgetLimit]);
   const totalExpense = expenses
     ? expenses.reduce((sum, item) => sum + item.amount, 0)
     : 0;
 
+  // 3. Calculate percentage spent
+  const percentSpent = budgetLimit > 0 ? (totalExpense / budgetLimit) * 100 : 0;
+  const isOverBudget = totalExpense > budgetLimit;
   // 🚀 Step 2: Wrap your Chart Data pipeline inside useMemo
   const chartData = useMemo(() => {
     // This console log will help you prove that your optimization works!
@@ -95,6 +106,55 @@ const TrackerPage = () => {
         <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight text-center mb-6 transition-colors">
           Personal Expense Tracker
         </h1>
+        {/* 🎯 Budget Goal Configuration & Progress Tracking Card */}
+        <div className="bg-white border border-gray-100 dark:bg-slate-900 dark:border-slate-800 shadow-sm rounded-2xl p-5 mb-6 transition-colors">
+          <div className="flex justify-between items-center mb-3">
+            <div>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+                Monthly Budget Target
+              </h3>
+              <span className="text-xs font-medium text-gray-500 dark:text-slate-400">
+                {isOverBudget
+                  ? "⚠️ You have exceeded your limit!"
+                  : "💪 You are safely within your limit"}
+              </span>
+            </div>
+
+            {/* Inline Input to change budget on the fly */}
+            <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-slate-800 px-3 py-1 rounded-xl border border-gray-200 dark:border-slate-700 transition-colors">
+              <span className="text-sm font-bold text-gray-500">₹</span>
+              <input
+                type="number"
+                value={budgetLimit}
+                onChange={(e) =>
+                  setBudgetLimit(parseFloat(e.target.value) || 0)
+                }
+                className="w-16 bg-transparent text-sm font-black text-gray-800 dark:text-white focus:outline-none"
+                placeholder="Set target"
+              />
+            </div>
+          </div>
+
+          {/* 📊 Modern Dynamic Progress Bar Tracker */}
+          <div className="w-full bg-gray-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden transition-colors">
+            <div
+              style={{ width: `${Math.min(percentSpent, 100)}%` }}
+              className={`h-full rounded-full transition-all duration-500 ease-out ${
+                percentSpent >= 100
+                  ? "bg-red-500"
+                  : percentSpent >= 85
+                    ? "bg-amber-500"
+                    : "bg-blue-600 dark:bg-blue-500"
+              }`}
+            />
+          </div>
+
+          {/* Data Labels Footer Row */}
+          <div className="flex justify-between items-center mt-2.5 text-xs font-bold uppercase tracking-wide text-gray-400 dark:text-slate-500">
+            <span>{Math.round(percentSpent)}% Utilized</span>
+            <span>Limit: ₹{budgetLimit}</span>
+          </div>
+        </div>
 
         <div className="bg-slate-900 dark:bg-slate-900 border dark:border-slate-800 text-white rounded-2xl p-6 text-center mb-6 shadow-md transition-colors">
           <span className="text-xl font-bold uppercase tracking-wider text-yellow-400 block mb-1">
