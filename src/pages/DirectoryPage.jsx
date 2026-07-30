@@ -3,37 +3,34 @@ import { useState, useEffect } from "react";
 const DirectoryPage = () => {
   const [team, setTeam] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // ⏳ 1. Add a loading state flag tracker (starts as true)
   const [isLoading, setIsLoading] = useState(true);
+  // 🌟 1. Track which employee card is clicked (null means modal is closed)
+  const [selectedMember, setSelectedMember] = useState(null);
 
   useEffect(() => {
-    setIsLoading(true); // Ensure loading is true when the fetch starts
-    // Fetch live corporate users from the external REST API endpoint
+    setIsLoading(true);
     fetch("https://dummyjson.com/users")
       .then((response) => response.json())
       .then((data) => {
-        // Take the first 4 profiles to populate our grid
         setTeam(data.users.slice(0, 4));
-        setIsLoading(false); // 🔥 2. Turn off loader once data arrives safely!
+        setIsLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching data:", error);
-        setIsLoading(false); // Turn off loader even if the network fails
+        setIsLoading(false);
       });
   }, []);
 
   return (
     <div className="max-w-3xl mx-auto text-center px-4 py-6">
-      {/* 📝 Main Heading */}
       <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2 transition-colors">
         Dynamic Company Directory
       </h1>
-      {/* 📝 Subtitle description text */}
       <p className="text-sm font-medium text-gray-500 dark:text-slate-400 mb-8 transition-colors">
         Fetched live via external REST API endpoints from DummyJSON
       </p>
 
-      {/* Real-time search filter text input */}
+      {/* Real-time search filter */}
       <div className="mb-6">
         <input
           className="px-4 py-2.5 w-full max-w-md border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-500 placeholder-gray-400 dark:placeholder-gray-500 transition-all shadow-sm"
@@ -46,31 +43,28 @@ const DirectoryPage = () => {
 
       {/* Grid container */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-        {/* ⚡ 3. CONDITIONAL RENDER: Show Skeleton pulses if loading, else show real data */}
         {isLoading
-          ? // Generate an array of 4 empty slots to render 4 pulsing skeleton cards
-            Array.from({ length: 4 }).map((_, index) => (
+          ? Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={`skeleton-${index}`}
                 className="animate-pulse bg-white border border-gray-100 dark:bg-slate-900/40 dark:border-slate-800/80 shadow-sm rounded-2xl p-6 text-left"
               >
-                {/* Pulsing Placeholder line for Employee Name */}
                 <div className="h-5 bg-gray-200 dark:bg-slate-800 rounded-lg w-3/4 mb-4"></div>
-                {/* Pulsing Placeholder block for Company Title Badge */}
                 <div className="h-6 bg-gray-100 dark:bg-slate-800/60 rounded-full w-1/2"></div>
               </div>
             ))
-          : // Render actual active data once it finishes transferring
-            team
+          : team
               .filter((member) =>
                 `${member.firstName} ${member.lastName}`
                   .toLowerCase()
                   .includes(searchTerm.toLowerCase()),
               )
               .map((member) => (
+                /* 🖱️ 2. Added onClick trigger and cursor pointer to open modal on click */
                 <div
                   key={member.id}
-                  className="bg-white border border-gray-100 dark:bg-slate-900/40 dark:border-slate-800/80 shadow-sm rounded-2xl p-6 text-left transition duration-300 hover:shadow-md hover:-translate-y-0.5"
+                  onClick={() => setSelectedMember(member)}
+                  className="bg-white border border-gray-100 dark:bg-slate-900/40 dark:border-slate-800/80 shadow-sm rounded-2xl p-6 text-left transition duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
                 >
                   <h2 className="font-bold text-gray-900 dark:text-white text-lg mb-2 transition-colors">
                     Welcome, {member.firstName} {member.lastName}!
@@ -81,6 +75,66 @@ const DirectoryPage = () => {
                 </div>
               ))}
       </div>
+
+      {/* 🖼️ 3. CONDITIONAL OVERLAY MODAL WINDOW BOX */}
+      {selectedMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+          {/* Modal Backdrop overlay closer element click wrapper */}
+          <div
+            className="absolute inset-0"
+            onClick={() => setSelectedMember(null)}
+          ></div>
+
+          {/* Main Content Modal Card Container */}
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-slate-800 text-center transition-all scale-100">
+            {/* Close Button Top Right */}
+            <button
+              onClick={() => setSelectedMember(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white font-bold cursor-pointer text-lg p-1"
+            >
+              ✕
+            </button>
+
+            {/* Profile Avatar Image Box */}
+            <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center mb-4 overflow-hidden">
+              <img
+                src={selectedMember.image}
+                alt="avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Employee Core Names Text headers */}
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              {selectedMember.firstName} {selectedMember.lastName}
+            </h3>
+            <p className="text-sm font-semibold text-blue-600 dark:text-yellow-300 mb-4">
+              {selectedMember.company.title}
+            </p>
+
+            {/* Rich Detail Contact Row Sections */}
+            <div className="space-y-2.5 text-left border-t border-gray-100 dark:border-slate-800 pt-4 mt-2">
+              <div className="text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider">
+                Contact Information
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                📧{" "}
+                <span className="font-medium ml-1">{selectedMember.email}</span>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                📞{" "}
+                <span className="font-medium ml-1">{selectedMember.phone}</span>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                🏢{" "}
+                <span className="font-medium ml-1">
+                  {selectedMember.company.name}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
