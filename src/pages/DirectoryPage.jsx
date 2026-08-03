@@ -69,6 +69,25 @@ const DirectoryPage = () => {
     setNewTitle("");
     setIsFormOpen(false);
   };
+  const handleDeleteEmployee = (idToDelete, e) => {
+    // ⚡ 1. Prevent the card's main onClick modal popup from opening when clicking delete
+    e.stopPropagation();
+
+    // ⚙️ 2. Mark the targeted item as "isDeleting: true" inside our state array
+    setTeam(
+      team.map((member) =>
+        member.id === idToDelete ? { ...member, isDeleting: true } : member,
+      ),
+    );
+
+    // ⏳ 3. Wait 300ms for the animation transition to finish executing
+    setTimeout(() => {
+      // 🗑️ 4. Filter it out of the array state once it is hidden
+      setTeam((prevTeam) =>
+        prevTeam.filter((member) => member.id !== idToDelete),
+      );
+    }, 300);
+  };
 
   return (
     <div className="max-w-3xl mx-auto text-center px-4 py-6">
@@ -159,15 +178,32 @@ const DirectoryPage = () => {
                   .includes(searchTerm.toLowerCase()),
               )
               .map((member) => (
-                /* 🖱️ 2. Added onClick trigger and cursor pointer to open modal on click */
+                /* 🔲 Profile Cards: Added height reduction tracking variables matching ExpenseItem's setup */
                 <div
                   key={member.id}
                   onClick={() => setSelectedMember(member)}
-                  className="bg-white border border-gray-100 dark:bg-slate-900/40 dark:border-slate-800/80 shadow-sm rounded-2xl p-6 text-left transition duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+                  className={`relative bg-white border border-gray-100 dark:bg-slate-900/40 dark:border-slate-800/80 shadow-sm rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer origin-center overflow-hidden
+        ${
+          member.isDeleting
+            ? "opacity-0 scale-90 max-h-0 py-0 my-0 border-0 pointer-events-none"
+            : "opacity-100 scale-100 max-h-48"
+        }`}
                 >
-                  <h2 className="font-bold text-gray-900 dark:text-white text-lg mb-2 transition-colors">
+                  {/* ✕ Action Delete Button: Positioned in top-right corner */}
+                  <button
+                    onClick={(e) => handleDeleteEmployee(member.id, e)}
+                    className="absolute top-4 right-4 text-gray-300 hover:text-red-500 font-bold transition text-sm p-1 rounded-md cursor-pointer active:scale-90 z-10"
+                    title="Remove Employee"
+                  >
+                    ✕
+                  </button>
+
+                  {/* 👤 Employee Name Text */}
+                  <h2 className="font-bold text-gray-900 dark:text-white text-lg mb-2 pr-6 transition-colors">
                     Welcome, {member.firstName} {member.lastName}!
                   </h2>
+
+                  {/* 🏷️ Badge Tag Element */}
                   <span className="text-xs font-semibold text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/50 px-3 py-1.5 rounded-full inline-block transition-colors">
                     {member.company.title}
                   </span>
