@@ -81,6 +81,22 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
       );
     }, 300);
   };
+  const handleResetDirectory = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to reset the directory and re-fetch the default corporate team?",
+      )
+    ) {
+      // 🗑️ 1. Clear the specific team cache from browser storage
+      localStorage.removeItem("savedTeamDirectory");
+
+      // 🔄 2. Force the app to re-fetch fresh profiles by temporarily emptying the array
+      setTeam([]);
+
+      // 🌐 3. Force-reload the page to re-trigger the root App.jsx useEffect API fetch script
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto text-center px-4 py-6">
@@ -105,12 +121,25 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
 
       {/* Add Employee Form panel control block layout section */}
       <div className="mb-6 max-w-md mx-auto text-right">
-        <button
-          onClick={() => setIsFormOpen(!isFormOpen)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-xl shadow-sm transition active:scale-98 cursor-pointer"
-        >
-          {isFormOpen ? "✕ Close Form" : "➕ Add New Team Member"}
-        </button>
+        {/* ➕ Add Employee & 🔄 Reset Directory Layout Panel Block Row */}
+        <div className="mb-6 max-w-md mx-auto flex justify-between items-center">
+          {/* 🔄 Reset Control Button */}
+          {team.length > 0 && (
+            <button
+              onClick={handleResetDirectory}
+              className="text-xs font-bold uppercase text-red-500 hover:text-red-700 transition cursor-pointer"
+            >
+              🔄 Reset Default Team
+            </button>
+          )}
+
+          <button
+            onClick={() => setIsFormOpen(!isFormOpen)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-xl shadow-sm transition active:scale-98 cursor-pointer"
+          >
+            {isFormOpen ? "✕ Close Form" : "➕ Add New Team Member"}
+          </button>
+        </div>
 
         {isFormOpen && (
           <form
