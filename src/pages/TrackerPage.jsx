@@ -1,5 +1,6 @@
 // ⚙️ Step 1: Add useMemo to your React imports at the very top
 import { useState, useEffect, useMemo } from "react";
+import Toast from "../Tost";
 import {
   PieChart,
   Pie,
@@ -15,6 +16,7 @@ const TrackerPage = () => {
     const localData = localStorage.getItem("savedExpenses");
     return localData ? JSON.parse(localData) : [];
   });
+  const [toastMessage, setToastMessage] = useState("");
   // 1. Add a new state for the budget limit (defaulting to ₹10,000)
   const [budgetLimit, setBudgetLimit] = useState(() => {
     const savedBudget = localStorage.getItem("savedBudget");
@@ -92,6 +94,7 @@ const TrackerPage = () => {
     setInputAmount("");
     setInputTitle("");
     setErrors({ title: false, amount: false }); // Reset error state explicitly
+    setToastMessage("Expense added successfully!"); // 🌟 TRIGGER THE ALERTS HERE!
   };
 
   const handleDeleteExpense = (idToDelete) => {
@@ -346,6 +349,10 @@ const TrackerPage = () => {
           </div>
         </div>
       </div>
+      {/* 🔔 FLOATING ALERT INJECTION NODE */}
+      {toastMessage && (
+        <Toast message={toastMessage} onClose={() => setToastMessage("")} />
+      )}
     </div>
   );
 };

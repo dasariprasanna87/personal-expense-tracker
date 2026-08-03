@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Toast from "../Tost";
 
 // 📥 Destructure team, setTeam, and isLoading directly from incoming parent props
 const DirectoryPage = ({ team, setTeam, isLoading }) => {
@@ -9,6 +10,7 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   // ⚠️ Track form validation errors
   const [errors, setErrors] = useState({ name: false, title: false });
+  const [toastMessage, setToastMessage] = useState("");
 
   // ⌨️ Keyboard Escape key listener: Manages closing the modal layout smoothly
   useEffect(() => {
@@ -60,6 +62,7 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
     setNewTitle("");
     setErrors({ name: false, title: false }); // Reset error state explicitly
     setIsFormOpen(false);
+    setToastMessage("Team member profile created!"); // 🌟 TRIGGER
   };
 
   // 🗑️ Animated Card Deletion handler with event propagation block controls
@@ -302,6 +305,10 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
             </div>
           </div>
         </div>
+      )}
+      {/* 🔔 FLOATING ALERT INJECTION NODE */}
+      {toastMessage && (
+        <Toast message={toastMessage} onClose={() => setToastMessage("")} />
       )}
     </div>
   );
