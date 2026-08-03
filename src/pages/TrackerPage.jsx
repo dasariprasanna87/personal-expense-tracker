@@ -54,27 +54,44 @@ const TrackerPage = () => {
   const [inputTitle, setInputTitle] = useState("");
   const [inputAmount, setInputAmount] = useState("");
   const [inputCategory, setInputCategory] = useState("Food");
+  // ⚠️ Track expense form validation errors
+  const [errors, setErrors] = useState({ title: false, amount: false });
 
   // AUTOMATIC SAVE
   useEffect(() => {
     localStorage.setItem("savedExpenses", JSON.stringify(expenses));
   }, [expenses]);
 
-  // Form Submission Handler
   const handleAddExpense = (e) => {
     e.preventDefault();
-    if (!inputTitle || !inputAmount) return;
+
+    // ⚙️ 1. Evaluate form parameters dynamically (.trim() handles empty spaces)
+    const isTitleInvalid = !inputTitle.trim();
+    const parsedAmount = parseFloat(inputAmount);
+    const isAmountInvalid =
+      !inputAmount || isNaN(parsedAmount) || parsedAmount <= 0;
+
+    const newErrors = {
+      title: isTitleInvalid,
+      amount: isAmountInvalid,
+    };
+
+    setErrors(newErrors);
+
+    // 🛑 2. Block submission if any required field fails verification
+    if (newErrors.title || newErrors.amount) return;
 
     const newExpense = {
       id: Date.now(),
       title: inputTitle,
-      amount: parseFloat(inputAmount),
+      amount: parsedAmount,
       category: inputCategory,
     };
 
     setExpenses([...expenses, newExpense]);
     setInputAmount("");
     setInputTitle("");
+    setErrors({ title: false, amount: false }); // Reset error state explicitly
   };
 
   const handleDeleteExpense = (idToDelete) => {
@@ -207,10 +224,12 @@ const TrackerPage = () => {
           </div>
         )}
 
+        {/* 🛠️ Modern Input Entry Form Card */}
         <form
           onSubmit={handleAddExpense}
           className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 mb-6 transition-colors"
         >
+          {/* Expense Title Field Box */}
           <div className="mb-4">
             <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-2 transition-colors">
               Expense Title
@@ -219,12 +238,27 @@ const TrackerPage = () => {
               type="text"
               placeholder="e.g., Dinner, Groceries"
               value={inputTitle}
-              onChange={(e) => setInputTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm placeholder-gray-400 dark:placeholder-gray-500"
+              onChange={(e) => {
+                setInputTitle(e.target.value);
+                if (errors.title)
+                  setErrors((prev) => ({ ...prev, title: false })); // Clear red border instantly on type
+              }}
+              className={`w-full px-3 py-2 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 text-sm transition-all border shadow-sm placeholder-gray-400 dark:placeholder-gray-500
+        ${
+          errors.title
+            ? "border-red-500 focus:ring-red-500/20"
+            : "border-gray-200 dark:border-slate-700 focus:ring-blue-500"
+        }`}
             />
+            {errors.title && (
+              <p className="text-red-500 text-xs font-semibold mt-1.5 ml-1 animate-fade-in">
+                ⚠️ Expense title is required.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Amount Input Field Box */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 transition-colors">
                 Amount (₹)
@@ -233,10 +267,26 @@ const TrackerPage = () => {
                 type="number"
                 placeholder="150"
                 value={inputAmount}
-                onChange={(e) => setInputAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm placeholder-gray-400 dark:placeholder-gray-500"
+                onChange={(e) => {
+                  setInputAmount(e.target.value);
+                  if (errors.amount)
+                    setErrors((prev) => ({ ...prev, amount: false })); // Clear red border instantly on type
+                }}
+                className={`w-full px-3 py-2 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 text-sm transition-all border shadow-sm placeholder-gray-400 dark:placeholder-gray-500
+          ${
+            errors.amount
+              ? "border-red-500 focus:ring-red-500/20"
+              : "border-gray-200 dark:border-slate-700 focus:ring-blue-500"
+          }`}
               />
+              {errors.amount && (
+                <p className="text-red-500 text-xs font-semibold mt-1.5 ml-1 animate-fade-in">
+                  ⚠️ Enter an amount &gt; 0.
+                </p>
+              )}
             </div>
+
+            {/* Category Selector Field Box */}
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1 transition-colors">
                 Category
