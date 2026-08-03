@@ -1,88 +1,65 @@
 import { useState, useEffect } from "react";
 
-const DirectoryPage = () => {
-  const [team, setTeam] = useState([]);
+// 📥 Destructure team, setTeam, and isLoading directly from incoming parent props
+const DirectoryPage = ({ team, setTeam, isLoading }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  // 🌟 1. Track which employee card is clicked (null means modal is closed)
   const [selectedMember, setSelectedMember] = useState(null);
-  // 1. Form tracking variables
   const [newName, setNewName] = useState("");
   const [newTitle, setNewTitle] = useState("");
-  const [isFormOpen, setIsFormOpen] = useState(false); // Controls opening/closing the form
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // ⌨️ Keyboard Escape key listener: Manages closing the modal layout smoothly
   useEffect(() => {
-    setIsLoading(true);
-    fetch("https://dummyjson.com/users")
-      .then((response) => response.json())
-      .then((data) => {
-        setTeam(data.users.slice(0, 4));
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        setIsLoading(false);
-      });
-  }, []);
-  // ⌨️ Side Effect: Listen for the Escape key to close the modal automatically
-  useEffect(() => {
-    // 1. Define the handler function
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         setSelectedMember(null);
       }
     };
-
-    // 2. Only add the event listener if a modal is actually open
     if (selectedMember) {
       window.addEventListener("keydown", handleKeyDown);
     }
-
-    // 3. 🔥 THE CLEANUP FUNCTION: Removes the listener when the modal closes or unmounts
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectedMember]); // 🔄 Re-run this effect only when selectedMember changes
+  }, [selectedMember]);
+
+  // ➕ Form submission handler: Adds new custom team members to root state array
   const handleAddEmployee = (e) => {
     e.preventDefault();
     if (!newName || !newTitle) return;
 
     const nameParts = newName.trim().split(" ");
-    // Using indexing directly to get clean, reliable string values
-    const firstName = nameParts[0] || "New";
+    const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(" ") || "Member";
 
     const newEmployee = {
       id: Date.now(),
-      firstName: firstName,
-      lastName: lastName,
+      firstName,
+      lastName,
       company: {
         title: newTitle,
         name: "My Dashboard App Corp",
       },
-      // ⚡ BULLETPROOF FIX: A direct public URL that works anywhere without needing template variables!
-      image: "https://dicebear.com",
+      image: "placeholder-triggered", // Triggers local SVG fallback inside modal
     };
 
-    setTeam([newEmployee, ...team]);
+    setTeam([newEmployee, ...team]); // prepends new employee at the top of the array
     setNewName("");
     setNewTitle("");
     setIsFormOpen(false);
   };
-  const handleDeleteEmployee = (idToDelete, e) => {
-    // ⚡ 1. Prevent the card's main onClick modal popup from opening when clicking delete
-    e.stopPropagation();
 
-    // ⚙️ 2. Mark the targeted item as "isDeleting: true" inside our state array
+  // 🗑️ Animated Card Deletion handler with event propagation block controls
+  const handleDeleteEmployee = (idToDelete, e) => {
+    e.stopPropagation(); // Stops main card click popup action from triggering
+
     setTeam(
       team.map((member) =>
         member.id === idToDelete ? { ...member, isDeleting: true } : member,
       ),
     );
 
-    // ⏳ 3. Wait 300ms for the animation transition to finish executing
     setTimeout(() => {
-      // 🗑️ 4. Filter it out of the array state once it is hidden
       setTeam((prevTeam) =>
         prevTeam.filter((member) => member.id !== idToDelete),
       );
@@ -91,6 +68,7 @@ const DirectoryPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto text-center px-4 py-6">
+      {/* Page Typography Headings */}
       <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2 transition-colors">
         Dynamic Company Directory
       </h1>
@@ -98,7 +76,7 @@ const DirectoryPage = () => {
         Fetched live via external REST API endpoints from DummyJSON
       </p>
 
-      {/* Real-time search filter */}
+      {/* Real-time search filter input field box container */}
       <div className="mb-6">
         <input
           className="px-4 py-2.5 w-full max-w-md border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:border-blue-500 placeholder-gray-400 dark:placeholder-gray-500 transition-all shadow-sm"
@@ -108,7 +86,8 @@ const DirectoryPage = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      {/* ➕ Add Employee Control Action Layout Block */}
+
+      {/* Add Employee Form panel control block layout section */}
       <div className="mb-6 max-w-md mx-auto text-right">
         <button
           onClick={() => setIsFormOpen(!isFormOpen)}
@@ -117,7 +96,6 @@ const DirectoryPage = () => {
           {isFormOpen ? "✕ Close Form" : "➕ Add New Team Member"}
         </button>
 
-        {/* Sliding Expandable Form Frame container panel box */}
         {isFormOpen && (
           <form
             onSubmit={handleAddEmployee}
@@ -159,10 +137,11 @@ const DirectoryPage = () => {
         )}
       </div>
 
-      {/* Grid container */}
+      {/* Grid container formatting live mapping arrays */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
         {isLoading
-          ? Array.from({ length: 4 }).map((_, index) => (
+          ? // 📊 Pulse shimmer skeletons fallbacks displayed while data transfers
+            Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={`skeleton-${index}`}
                 className="animate-pulse bg-white border border-gray-100 dark:bg-slate-900/40 dark:border-slate-800/80 shadow-sm rounded-2xl p-6 text-left"
@@ -178,18 +157,17 @@ const DirectoryPage = () => {
                   .includes(searchTerm.toLowerCase()),
               )
               .map((member) => (
-                /* 🔲 Profile Cards: Added height reduction tracking variables matching ExpenseItem's setup */
                 <div
                   key={member.id}
                   onClick={() => setSelectedMember(member)}
                   className={`relative bg-white border border-gray-100 dark:bg-slate-900/40 dark:border-slate-800/80 shadow-sm rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 cursor-pointer origin-center overflow-hidden
-        ${
-          member.isDeleting
-            ? "opacity-0 scale-90 max-h-0 py-0 my-0 border-0 pointer-events-none"
-            : "opacity-100 scale-100 max-h-48"
-        }`}
+                  ${
+                    member.isDeleting
+                      ? "opacity-0 scale-90 max-h-0 py-0 my-0 border-0 pointer-events-none"
+                      : "opacity-100 scale-100 max-h-48"
+                  }`}
                 >
-                  {/* ✕ Action Delete Button: Positioned in top-right corner */}
+                  {/* ✕ Action Delete Button row item */}
                   <button
                     onClick={(e) => handleDeleteEmployee(member.id, e)}
                     className="absolute top-4 right-4 text-gray-300 hover:text-red-500 font-bold transition text-sm p-1 rounded-md cursor-pointer active:scale-90 z-10"
@@ -198,12 +176,9 @@ const DirectoryPage = () => {
                     ✕
                   </button>
 
-                  {/* 👤 Employee Name Text */}
                   <h2 className="font-bold text-gray-900 dark:text-white text-lg mb-2 pr-6 transition-colors">
                     Welcome, {member.firstName} {member.lastName}!
                   </h2>
-
-                  {/* 🏷️ Badge Tag Element */}
                   <span className="text-xs font-semibold text-blue-600 bg-blue-50 dark:text-blue-300 dark:bg-blue-950/50 px-3 py-1.5 rounded-full inline-block transition-colors">
                     {member.company.title}
                   </span>
@@ -211,18 +186,14 @@ const DirectoryPage = () => {
               ))}
       </div>
 
-      {/* 🖼️ 3. CONDITIONAL OVERLAY MODAL WINDOW BOX */}
+      {/* Profile Detail overlay Modal Window Container */}
       {selectedMember && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
-          {/* Modal Backdrop overlay closer element click wrapper */}
           <div
             className="absolute inset-0"
             onClick={() => setSelectedMember(null)}
           ></div>
-
-          {/* Main Content Modal Card Container */}
           <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-slate-800 text-center transition-all scale-100">
-            {/* Close Button Top Right */}
             <button
               onClick={() => setSelectedMember(null)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white font-bold cursor-pointer text-lg p-1"
@@ -230,19 +201,16 @@ const DirectoryPage = () => {
               ✕
             </button>
 
-            {/* Profile Avatar Image Box */}
-            {/* 👤 Profile Avatar Image Box - FIXED to use local SVGs instead of external web URLs */}
+            {/* Avatar block with structural logic fallback check */}
             <div className="w-20 h-20 mx-auto rounded-full bg-blue-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 flex items-center justify-center mb-4 overflow-hidden shadow-inner">
               {selectedMember.image &&
-              !selectedMember.image.includes("dicebear") ? (
-                // If it's a real live user from DummyJSON, load their real network image safely
+              !selectedMember.image.includes("placeholder-triggered") ? (
                 <img
                   src={selectedMember.image}
                   alt="avatar"
                   className="w-full h-full object-cover"
                 />
               ) : (
-                // ⚡ FALLBACK: If it's your custom member, render a local, beautiful vector silhouette icon instantly without any network call!
                 <svg
                   className="w-10 h-10 text-blue-500 dark:text-blue-400"
                   fill="none"
@@ -260,7 +228,6 @@ const DirectoryPage = () => {
               )}
             </div>
 
-            {/* Employee Core Names Text headers */}
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
               {selectedMember.firstName} {selectedMember.lastName}
             </h3>

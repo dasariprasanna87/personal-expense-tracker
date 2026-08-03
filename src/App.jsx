@@ -4,22 +4,37 @@ import TrackerPage from "./pages/TrackerPage";
 import DirectoryPage from "./pages/DirectoryPage";
 
 const App = () => {
-  // 💾 LAZY INITIALIZATION: Check localStorage first!
-  // If "savedTheme" is exactly "dark", start as true, otherwise start as false.
   const [darkMode, setDarkMode] = useState(() => {
     const savedTheme = localStorage.getItem("savedTheme");
     return savedTheme === "dark";
   });
 
-  // 🔄 DUAL-PURPOSE SIDE EFFECT: Updates the HTML class AND saves preference to localStorage
+  // 👥 LIFTED STATE UP: Employee data now lives at the root app level!
+  const [team, setTeam] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetch("https://dummyjson.com/users")
+      .then((response) => response.json())
+      .then((data) => {
+        setTeam(data.users.slice(0, 4));
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        setIsLoading(false);
+      });
+  }, []);
+
   useEffect(() => {
     const rootElement = document.documentElement;
     if (darkMode) {
       rootElement.classList.add("dark");
-      localStorage.setItem("savedTheme", "dark"); // Save choice [1]
+      localStorage.setItem("savedTheme", "dark");
     } else {
       rootElement.classList.remove("dark");
-      localStorage.setItem("savedTheme", "light"); // Save choice [1]
+      localStorage.setItem("savedTheme", "light");
     }
   }, [darkMode]);
 
@@ -40,14 +55,18 @@ const App = () => {
               >
                 💰 Expenses
               </Link>
+
+              {/* 📊 DYNAMIC NAV BADGE: Reads team array length instantly! */}
               <Link
                 to="/directory"
-                className="text-sm font-semibold text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-yellow-300 transition-colors"
+                className="text-sm font-semibold text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-yellow-300 transition-colors flex items-center gap-1.5"
               >
                 👥 Employees
+                <span className="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300 text-xs px-2 py-0.5 rounded-full font-bold transition-all">
+                  {team.length}
+                </span>
               </Link>
 
-              {/* Theme Selector Switch Button (Text condition adjusted to look correct!) */}
               <button
                 onClick={() => setDarkMode(!darkMode)}
                 className="bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 transition active:scale-95 cursor-pointer font-semibold shadow-sm"
@@ -62,7 +81,17 @@ const App = () => {
         <div className="py-6">
           <Routes>
             <Route path="/" element={<TrackerPage />} />
-            <Route path="/directory" element={<DirectoryPage />} />
+            {/* ⚙️ Pass variables down as props to the directory page */}
+            <Route
+              path="/directory"
+              element={
+                <DirectoryPage
+                  team={team}
+                  setTeam={setTeam}
+                  isLoading={isLoading}
+                />
+              }
+            />
           </Routes>
         </div>
       </div>
