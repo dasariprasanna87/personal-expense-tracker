@@ -7,6 +7,8 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
   const [newName, setNewName] = useState("");
   const [newTitle, setNewTitle] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  // ⚠️ Track form validation errors
+  const [errors, setErrors] = useState({ name: false, title: false });
 
   // ⌨️ Keyboard Escape key listener: Manages closing the modal layout smoothly
   useEffect(() => {
@@ -26,7 +28,17 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
   // ➕ Form submission handler: Adds new custom team members to root state array
   const handleAddEmployee = (e) => {
     e.preventDefault();
-    if (!newName || !newTitle) return;
+
+    // ⚙️ 1. Reset error state flags before checking
+    const newErrors = {
+      name: !newName.trim(),
+      title: !newTitle.trim(),
+    };
+
+    setErrors(newErrors);
+
+    // 🛑 2. Block submission if any required field is empty
+    if (newErrors.name || newErrors.title) return;
 
     const nameParts = newName.trim().split(" ");
     const firstName = nameParts[0];
@@ -40,12 +52,13 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
         title: newTitle,
         name: "My Dashboard App Corp",
       },
-      image: "placeholder-triggered", // Triggers local SVG fallback inside modal
+      image: "placeholder-triggered",
     };
 
-    setTeam([newEmployee, ...team]); // prepends new employee at the top of the array
+    setTeam([newEmployee, ...team]);
     setNewName("");
     setNewTitle("");
+    setErrors({ name: false, title: false }); // Reset error state explicitly
     setIsFormOpen(false);
   };
 
@@ -101,6 +114,7 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
             onSubmit={handleAddEmployee}
             className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-5 rounded-2xl shadow-sm text-left mt-4 transition-all duration-300"
           >
+            {/* Full Name Input Field */}
             <div className="mb-3.5">
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Full Name
@@ -109,11 +123,27 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
                 type="text"
                 placeholder="John Doe"
                 value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                onChange={(e) => {
+                  setNewName(e.target.value);
+                  if (errors.name)
+                    setErrors((prev) => ({ ...prev, name: false })); // Remove red border on type
+                }}
+                className={`w-full px-3 py-2 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 text-sm transition-all border
+          ${
+            errors.name
+              ? "border-red-500 focus:ring-red-500/20"
+              : "border-gray-200 dark:border-slate-700 focus:ring-blue-500"
+          }`}
               />
+              {/* ⚠️ Dynamic Alert Text Notice */}
+              {errors.name && (
+                <p className="text-red-500 text-xs font-semibold mt-1.5 ml-1 animate-fade-in">
+                  ⚠️ Full Name is required to create a profile.
+                </p>
+              )}
             </div>
 
+            {/* Corporate Title / Role Input Field */}
             <div className="mb-4">
               <label className="block text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Corporate Title / Role
@@ -122,14 +152,29 @@ const DirectoryPage = ({ team, setTeam, isLoading }) => {
                 type="text"
                 placeholder="Lead Architect, Specialist"
                 value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                onChange={(e) => {
+                  setNewTitle(e.target.value);
+                  if (errors.title)
+                    setErrors((prev) => ({ ...prev, title: false })); // Remove red border on type
+                }}
+                className={`w-full px-3 py-2 bg-white dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 text-sm transition-all border
+          ${
+            errors.title
+              ? "border-red-500 focus:ring-red-500/20"
+              : "border-gray-200 dark:border-slate-700 focus:ring-blue-500"
+          }`}
               />
+              {/* ⚠️ Dynamic Alert Text Notice */}
+              {errors.title && (
+                <p className="text-red-500 text-xs font-semibold mt-1.5 ml-1 animate-fade-in">
+                  ⚠️ Corporate Role is required to distribute title tags.
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
-              className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white font-semibold py-2 rounded-xl text-sm transition"
+              className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700 text-white font-semibold py-2 rounded-xl text-sm transition cursor-pointer"
             >
               Save Employee Profile
             </button>
