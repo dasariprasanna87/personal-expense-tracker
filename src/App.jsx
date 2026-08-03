@@ -9,16 +9,34 @@ const App = () => {
     return savedTheme === "dark";
   });
 
-  // 👥 LIFTED STATE UP: Employee data now lives at the root app level!
-  const [team, setTeam] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // 👥 LAZY STATE INITIALIZATION: Check localStorage for existing directory data first [1]
+  const [team, setTeam] = useState(() => {
+    const localTeam = localStorage.getItem("savedTeamDirectory");
+    return localTeam ? JSON.parse(localTeam) : []; // Starts empty if no cache exists [1]
+  });
 
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 🔄 REST API NETWORK PIPELINE: Run only if localStorage cache is empty
   useEffect(() => {
+    const localTeam = localStorage.getItem("savedTeamDirectory");
+
+    // If we already have saved data in storage, don't waste network data fetching it again!
+    if (localTeam && JSON.parse(localTeam).length > 0) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     fetch("https://dummyjson.com/users")
       .then((response) => response.json())
       .then((data) => {
-        setTeam(data.users.slice(0, 4));
+        const initialProfiles = data.users.slice(0, 4);
+        setTeam(initialProfiles);
+        localStorage.setItem(
+          "savedTeamDirectory",
+          JSON.stringify(initialProfiles),
+        ); // Seed storage cache
         setIsLoading(false);
       })
       .catch((error) => {
@@ -27,6 +45,14 @@ const App = () => {
       });
   }, []);
 
+  // 💾 AUTOMATIC TEAM PERSISTENCE TRACKER: Write modifications to local disk whenever state shifts [1]
+  useEffect(() => {
+    if (team.length > 0) {
+      localStorage.setItem("savedTeamDirectory", JSON.stringify(team));
+    }
+  }, [team]);
+
+  // Theme configuration lifecycle sync
   useEffect(() => {
     const rootElement = document.documentElement;
     if (darkMode) {
@@ -56,7 +82,6 @@ const App = () => {
                 💰 Expenses
               </Link>
 
-              {/* 📊 DYNAMIC NAV BADGE: Reads team array length instantly! */}
               <Link
                 to="/directory"
                 className="text-sm font-semibold text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-yellow-300 transition-colors flex items-center gap-1.5"
@@ -81,7 +106,6 @@ const App = () => {
         <div className="py-6">
           <Routes>
             <Route path="/" element={<TrackerPage />} />
-            {/* ⚙️ Pass variables down as props to the directory page */}
             <Route
               path="/directory"
               element={
