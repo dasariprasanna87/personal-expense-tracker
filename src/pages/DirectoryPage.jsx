@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Toast from "../Tost";
+import { DashboardContext } from "../context/DashboardContext";
 
 // 📥 Destructure team, setTeam, and isLoading directly from incoming parent props
-const DirectoryPage = ({ team, setTeam, isLoading }) => {
+const DirectoryPage = () => {
+  const { team, setTeam, isLoading } = useContext(DashboardContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [newName, setNewName] = useState("");

@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { HashRouter as Router, Routes, Route, Link } from "react-router-dom";
 import TrackerPage from "./pages/TrackerPage";
 import DirectoryPage from "./pages/DirectoryPage";
+// 📥 Import the Context hooks
+import { DashboardContext } from "./context/DashboardContext";
 
 const App = () => {
   const [darkMode, setDarkMode] = useState(() => {
@@ -9,50 +11,9 @@ const App = () => {
     return savedTheme === "dark";
   });
 
-  // 👥 LAZY STATE INITIALIZATION: Check localStorage for existing directory data first [1]
-  const [team, setTeam] = useState(() => {
-    const localTeam = localStorage.getItem("savedTeamDirectory");
-    return localTeam ? JSON.parse(localTeam) : []; // Starts empty if no cache exists [1]
-  });
+  // ☁️ Tap directly into the global cloud to read data instantly!
+  const { team } = useContext(DashboardContext);
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  // 🔄 REST API NETWORK PIPELINE: Run only if localStorage cache is empty
-  useEffect(() => {
-    const localTeam = localStorage.getItem("savedTeamDirectory");
-
-    // If we already have saved data in storage, don't waste network data fetching it again!
-    if (localTeam && JSON.parse(localTeam).length > 0) {
-      setIsLoading(false);
-      return;
-    }
-
-    setIsLoading(true);
-    fetch("https://dummyjson.com/users")
-      .then((response) => response.json())
-      .then((data) => {
-        const initialProfiles = data.users.slice(0, 4);
-        setTeam(initialProfiles);
-        localStorage.setItem(
-          "savedTeamDirectory",
-          JSON.stringify(initialProfiles),
-        ); // Seed storage cache
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        setIsLoading(false);
-      });
-  }, []);
-
-  // 💾 AUTOMATIC TEAM PERSISTENCE TRACKER: Write modifications to local disk whenever state shifts [1]
-  useEffect(() => {
-    if (team.length > 0) {
-      localStorage.setItem("savedTeamDirectory", JSON.stringify(team));
-    }
-  }, [team]);
-
-  // Theme configuration lifecycle sync
   useEffect(() => {
     const rootElement = document.documentElement;
     if (darkMode) {
@@ -67,7 +28,6 @@ const App = () => {
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors duration-300">
-        {/* 🧭 NAVIGATION BAR */}
         <nav className="bg-white border-b border-gray-100 dark:bg-slate-900 dark:border-slate-800 p-4 shadow-sm rounded-b-xl transition-colors duration-300">
           <div className="max-w-2xl mx-auto flex justify-between items-center">
             <span className="font-bold text-blue-600 dark:text-yellow-300 text-xl transition-colors">
@@ -88,7 +48,7 @@ const App = () => {
               >
                 👥 Employees
                 <span className="bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-300 text-xs px-2 py-0.5 rounded-full font-bold transition-all">
-                  {team.length}
+                  {team.length} {/* Loaded globally */}
                 </span>
               </Link>
 
@@ -102,20 +62,11 @@ const App = () => {
           </div>
         </nav>
 
-        {/* Outer full-screen page content container */}
         <div className="py-6">
           <Routes>
             <Route path="/" element={<TrackerPage />} />
-            <Route
-              path="/directory"
-              element={
-                <DirectoryPage
-                  team={team}
-                  setTeam={setTeam}
-                  isLoading={isLoading}
-                />
-              }
-            />
+            {/* 🛑 NOTICE: No more prop drilling! DirectoryPage loads its own data now */}
+            <Route path="/directory" element={<DirectoryPage />} />
           </Routes>
         </div>
       </div>
