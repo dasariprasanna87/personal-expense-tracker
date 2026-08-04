@@ -4,7 +4,8 @@ import { DashboardContext } from "../context/DashboardContext";
 
 // 📥 Destructure team, setTeam, and isLoading directly from incoming parent props
 const DirectoryPage = () => {
-  const { team, setTeam, isLoading } = useContext(DashboardContext);
+  const { team, setTeam, isLoading, resetDirectoryMutation } =
+    useContext(DashboardContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMember, setSelectedMember] = useState(null);
   const [newName, setNewName] = useState("");
@@ -89,14 +90,8 @@ const DirectoryPage = () => {
         "Are you sure you want to reset the directory and re-fetch the default corporate team?",
       )
     ) {
-      // 🗑️ 1. Clear the specific team cache from browser storage
-      localStorage.removeItem("savedTeamDirectory");
-
-      // 🔄 2. Force the app to re-fetch fresh profiles by temporarily emptying the array
-      setTeam([]);
-
-      // 🌐 3. Force-reload the page to re-trigger the root App.jsx useEffect API fetch script
-      window.location.reload();
+      // ⚡ Execute TanStack query cache invalidation cleanly!
+      resetDirectoryMutation.mutate();
     }
   };
 
