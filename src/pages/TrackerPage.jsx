@@ -1,6 +1,6 @@
 // ⚙️ Step 1: Add useMemo to your React imports at the very top
 import { useState, useEffect, useMemo } from "react";
-import Toast from "../Tost";
+import Toast from "../components/Tost";
 import {
   PieChart,
   Pie,

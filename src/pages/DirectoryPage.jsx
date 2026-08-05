@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import Toast from "../Tost";
+import Toast from "../components/Tost";
 import { DashboardContext } from "../context/DashboardContext";
 
 // 📥 Destructure team, setTeam, and isLoading directly from incoming parent props
